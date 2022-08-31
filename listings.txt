@@ -94,3 +94,6 @@ http://www.daft.ie/for-rent/apartment-apartment-7-johns-court-john-street-west-c
 http://www.daft.ie/for-rent/apartment-grove-avenue-blackrock-co-dublin/4035281
 http://www.daft.ie/for-rent/apartment-apartment-156-the-oak-rathfarnham-dublin-14/4026915
 http://www.daft.ie/for-rent/house-32-clanree-road-donnycarney-dublin-5/3962744
+http://www.daft.ie/for-rent/house-oldcourt-lodge-ballycullen-dublin-16/4048856
+http://www.daft.ie/for-rent/apartment-the-orchard-lucan-co-dublin/4048876
+http://www.daft.ie/for-rent/apartment-st-fintans-north-street-swords-co-dublin/4048968
