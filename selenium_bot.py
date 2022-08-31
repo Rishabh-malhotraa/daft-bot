@@ -45,6 +45,9 @@ def send_automated_response(listings):
             time.sleep(1)
             driver.find_element(By.ID, "message").send_keys(
                 os.getenv("daft_text"))
+            time.sleep(1)
+            driver.find_element(By.CLASS_NAME, "cWKcCS").click()
+            time.sleep(1)
 
         except:
             error_notify(l)
