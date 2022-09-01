@@ -11,23 +11,23 @@ def send_automated_response(listings):
     if len(listings) == 0:
         return
 
-    # Uncomment for UBUNUTU
+    # # Uncomment for UBUNUTU
     # driver_location = "/usr/bin/chromedriver"
     # binary_location = "/usr/bin/google-chrome"
 
-    options = webdriver.ChromeOptions()
+    # options = webdriver.ChromeOptions()
     # options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument("window-size=1920x1024")
+    # options.add_argument('--no-sandbox')
+    # options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument("window-size=1920x1024")
 
     # options.binary_location = binary_location
 
-    driver = webdriver.Chrome(
-        # executable_path=driver_location,
-        chrome_options=options)
+    # driver = webdriver.Chrome(
+    #     executable_path=driver_location,
+    #     chrome_options=options)
 
-    # driver = webdriver.Chrome()
+    driver = webdriver.Chrome()
 
     login_daft(driver)
 
@@ -52,8 +52,8 @@ def send_automated_response(listings):
                 os.getenv("daft_text"))
             time.sleep(3)
             driver.find_element(
-                By.XPATH, "//*[@data-testid='submit-button']").submit()
-            time.sleep(3)
+                By.XPATH, "//*[@data-testid='submit-button']").click()
+            time.sleep(5)
             print("MESSAGE SENT TO AGENT!")
 
         except Exception as e:
