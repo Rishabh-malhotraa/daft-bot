@@ -39,7 +39,7 @@ def get_new_listings(daft, cache):
 
 
 def main():
-    print("\n\n==========\n\n")
+    print("=====START=====")
     print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
     daft = daft_with_filters()
     cache = load_cache()
@@ -50,7 +50,7 @@ def main():
     send_automated_response(new_listings)
 
     update_cache(cache)
-    print("Finished :) \n\n==========\n\n")
+    print("Finished :) \n====END======")
 
 
 if __name__ == '__main__':
