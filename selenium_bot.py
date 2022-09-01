@@ -12,19 +12,20 @@ def send_automated_response(listings):
         return
 
     # Uncomment for UBUNUTU
-    driver_location = "/usr/bin/chromedriver"
-    binary_location = "/usr/bin/google-chrome"
+    # driver_location = "/usr/bin/chromedriver"
+    # binary_location = "/usr/bin/google-chrome"
 
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    # options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument("window-size=1920x1024")
 
-    options.binary_location = binary_location
+    # options.binary_location = binary_location
 
     driver = webdriver.Chrome(
-        executable_path=driver_location, chrome_options=options)
+        # executable_path=driver_location,
+        chrome_options=options)
 
     # driver = webdriver.Chrome()
 
@@ -50,11 +51,13 @@ def send_automated_response(listings):
             driver.find_element(By.ID, "message").send_keys(
                 os.getenv("daft_text"))
             time.sleep(3)
-            # driver.find_element(By.CLASS_NAME, "cWKcCS").click()
+            driver.find_element(
+                By.XPATH, "//*[@data-testid='submit-button']").submit()
             time.sleep(3)
             print("MESSAGE SENT TO AGENT!")
 
         except Exception as e:
+            print(e)
             error_notify(l)
             print("error sending mail")
 
@@ -64,7 +67,7 @@ def send_automated_response(listings):
 
 
 def login_daft(driver):
-    print("Navigating to printin page")
+    print("Navigating to login page")
     # driver.get("https://auth.daft.ie/auth/realms/daft/protocol/openid-connect/auth?client_id=daft-web-v1&scope=openid%20offline_access%20user_store&response_type=code&redirect_uri=https%3A%2F%2Fwww.daft.ie%2Fauth%2Fcallback&state=m4wtoEpLgZvXfook85fjhIRAC14oTbbqPO-6wdozGjE&callbackURL=https%3A%2F%2Fwww.daft.ie%2Fauth%2Fcallback&failureRedirect=%2F&code_challenge=4AvPPBB-omWQ-DAkixraB4IhvDh9cSfoR3kj5jI458s&code_challenge_method=S256")
     driver.get("https://daft.ie")
 
