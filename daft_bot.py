@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 from daftlistings import Daft, Location, SearchType
 from dotenv import load_dotenv
 from email_notification import notify
 from selenium_bot import send_automated_response
 from daft_bot_utils import load_cache, update_cache
 from datetime import datetime
-
+import os
 
 load_dotenv()
 
@@ -40,15 +38,16 @@ def get_new_listings(daft, cache):
 def main():
     print("=====START=====")
     print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
+
     daft = daft_with_filters()
-    cache = load_cache()
+    cache = load_cache(os.getenv("cache_file"))
+
     new_listings = get_new_listings(daft, cache)
 
     notify(new_listings)
-
     send_automated_response(new_listings)
 
-    update_cache(cache)
+    update_cache(cache, os.getenv("cache_file"))
     print("Finished :) \n====END======")
 
 

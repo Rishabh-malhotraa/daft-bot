@@ -55,7 +55,6 @@ def send_automated_response(listings):
             print("MESSAGE SENT TO AGENT!")
 
         except Exception as e:
-            print(e)
             error_notify(l)
             print("error sending mail")
 
