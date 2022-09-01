@@ -11,27 +11,26 @@ def send_automated_response(listings):
     if len(listings) == 0:
         return
 
-    # # Uncomment for UBUNUTU
-    # driver_location = "/usr/bin/chromedriver"
-    # binary_location = "/usr/bin/google-chrome"
+    # Uncomment for UBUNUTU
+    driver_location = "/usr/bin/chromedriver"
+    binary_location = "/usr/bin/google-chrome"
 
-    # options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--no-sandbox')
-    # options.add_argument('--disable-dev-shm-usage')
-    # options.add_argument("window-size=1920x1024")
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument("window-size=1920x1024")
 
-    # options.binary_location = binary_location
+    options.binary_location = binary_location
 
-    # driver = webdriver.Chrome(
-    #     executable_path=driver_location, chrome_options=options)
+    driver = webdriver.Chrome(
+        executable_path=driver_location, chrome_options=options)
 
-    driver = webdriver.Chrome()
+    # driver = webdriver.Chrome()
 
     login_daft(driver)
 
     # SEND MESSAGE
-
     for l in listings:
         try:
             driver.get(l.daft_link)

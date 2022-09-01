@@ -6,6 +6,8 @@ from selenium.webdriver.common.by import By
 from email_notification import notify
 from selenium_bot import send_automated_response
 from daft_bot_utils import load_cache, update_cache
+from datetime import datetime
+
 
 load_dotenv()
 
@@ -37,6 +39,8 @@ def get_new_listings(daft, cache):
 
 
 def main():
+    print("\n\n==========\n\n")
+    print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
     daft = daft_with_filters()
     cache = load_cache()
     new_listings = get_new_listings(daft, cache)
@@ -46,7 +50,7 @@ def main():
     send_automated_response(new_listings)
 
     update_cache(cache)
-    print("Finished :)")
+    print("Finished :) \n\n==========\n\n")
 
 
 if __name__ == '__main__':
