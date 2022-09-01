@@ -1,8 +1,7 @@
-from email.message import EmailMessage
+#!/usr/bin/env python
+
 from daftlistings import Daft, Location, SearchType
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 from email_notification import notify
 from selenium_bot import send_automated_response
 from daft_bot_utils import load_cache, update_cache
