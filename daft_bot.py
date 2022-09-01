@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from email_notification import notify
 from selenium_bot import send_automated_response
 from daft_bot_utils import load_cache, update_cache
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 load_dotenv()
@@ -37,7 +37,9 @@ def get_new_listings(daft, cache):
 
 def main():
     print("=====START=====")
-    print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
+
+    IndianTime = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    print(IndianTime.strftime("%m/%d/%Y, %H:%M:%S"))
 
     daft = daft_with_filters()
     cache = load_cache(os.getenv("cache_file"))
