@@ -3,31 +3,35 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from email_notification import error_notify
+from sys import platform
 
 # Selenium Send Automted Response
+
+
+def get_driver():
+    # linux
+    if platform == "linux" or platform == "linux2":
+        driver_location = "/usr/bin/chromedriver"
+        binary_location = "/usr/bin/google-chrome"
+
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument("window-size=1920x1024")
+
+        options.binary_location = binary_location
+        return webdriver.Chrome(executable_path=driver_location, chrome_options=options)
+
+    elif platform == "win32":
+        return webdriver.Chrome()
 
 
 def send_automated_response(listings):
     if len(listings) == 0:
         return
 
-    # # Uncomment for UBUNUTU
-    # driver_location = "/usr/bin/chromedriver"
-    # binary_location = "/usr/bin/google-chrome"
-
-    # options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--no-sandbox')
-    # options.add_argument('--disable-dev-shm-usage')
-    # options.add_argument("window-size=1920x1024")
-
-    # options.binary_location = binary_location
-
-    # driver = webdriver.Chrome(
-    #     executable_path=driver_location,
-    #     chrome_options=options)
-
-    driver = webdriver.Chrome()
+    driver = get_driver()
 
     login_daft(driver)
 
