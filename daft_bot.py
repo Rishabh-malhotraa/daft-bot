@@ -25,7 +25,8 @@ def load_environment():
 def daft_with_filters():
     daft = Daft()
     # daft.set_location(Location.DUBLIN)
-    daft.set_location(Location.RANELAGH_DUBLIN, Distance.KM3)
+    daft.set_location(
+        [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN], Distance.KM5)
     daft.set_min_beds(os.getenv('rent_min_bedroom'))
     daft.set_max_beds(os.getenv('rent_max_bedroom'))
     daft.set_search_type(SearchType.RESIDENTIAL_RENT)
@@ -57,9 +58,9 @@ def main():
     cache = load_cache(os.getenv("cache_file"))
 
     new_listings = get_new_listings(daft, cache)
-
-    notify(new_listings)
-    send_automated_response(new_listings)
+    print(new_listings)
+    # notify(new_listings)
+    # send_automated_response(new_listings)
 
     update_cache(cache, os.getenv("cache_file"))
     print("Finished :) \n====END======")
