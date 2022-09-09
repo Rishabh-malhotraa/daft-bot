@@ -2,10 +2,11 @@ from email.message import EmailMessage
 import os
 import smtplib
 import sys
+from daftlistings import Listing
 
 
 # Sends Mail to Users about listings
-def notify(listings):
+def notify(listings: list[Listing]):
     recipients = os.getenv('recipients').split(',')
     sender = os.getenv("sender_email")
     if len(listings) > 0:
@@ -30,7 +31,7 @@ def notify(listings):
 # Notify helper function
 
 
-def get_message(listings, recipients, sender):
+def get_message(listings: list[Listing], recipients: list[str], sender: str | None) -> EmailMessage:
     text = "%d new ad(s) found.\n" % (len(listings))
     for i in listings:
         text += "-----\n%s\n%s\n%s\n" % (i.title, i.daft_link, i.price)
@@ -45,7 +46,7 @@ def get_message(listings, recipients, sender):
 
 # ERROR NOTIFY
 
-def error_notify(listing):
+def error_notify(listing: list[Listing]):
     recipients = os.getenv('recipients').split(',')
     sender = os.getenv("sender_email")
     msg = get_error_message(listing, recipients, sender)
@@ -67,7 +68,7 @@ def error_notify(listing):
     print("[*] Email Send.")
 
 
-def get_error_message(listing, recipients, sender):
+def get_error_message(listing: Listing, recipients: list[str], sender: str | None) -> EmailMessage:
     text = "Unable to send automated message to agent"
     text += "-----\n%s\n%s\n%s\n" % (listing.title,
                                      listing.daft_link, listing.price)
