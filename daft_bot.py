@@ -1,14 +1,14 @@
-from daftlistings import Daft, Location, SearchType, Distance
+from daftlistings import Daft, Location, SearchType, Distance, Listing
 from dotenv import load_dotenv
 from email_notification import notify
 from selenium_bot import send_automated_response
-from daft_bot_utils import load_cache, update_cache
+from daft_bot_utils import load_cache, update_cache, save_images
 from datetime import datetime, timedelta
 import os
 import sys
 
 
-def load_environment():
+def load_environment() -> str:
     load_dotenv(os.path.join(os.getcwd(), '.env'))
 
     ENV = sys.argv[1] if len(sys.argv) > 1 else '2'
@@ -22,7 +22,7 @@ def load_environment():
     return ENV
 
 
-def daft_with_filters():
+def daft_with_filters() -> Daft:
     daft = Daft()
     # daft.set_location(Location.DUBLIN)
     daft.set_location(
@@ -36,7 +36,7 @@ def daft_with_filters():
 # search listings on daft and update cache
 
 
-def get_new_listings(daft, cache):
+def get_new_listings(daft: Daft, cache: dict) -> list[Listing]:
     new_listings = []
     listings = daft.search()
     for l in listings:
@@ -58,9 +58,11 @@ def main():
     cache = load_cache(os.getenv("cache_file"))
 
     new_listings = get_new_listings(daft, cache)
-    print(new_listings)
-    # notify(new_listings)
-    # send_automated_response(new_listings)
+
+    notify(new_listings)
+    send_automated_response(new_listings)
+
+    save_images(new_listings)
 
     update_cache(cache, os.getenv("cache_file"))
     print("Finished :) \n====END======")
