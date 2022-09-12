@@ -59,12 +59,21 @@ def send_automated_response(listings: list[Listing]):
             driver.find_element(
                 By.XPATH, "//*[@data-testid='submit-button']").click()
             time.sleep(5)
-            print("MESSAGE SENT TO AGENT!")
+
+            success_text = driver.find_element(
+                By.XPATH, "//*[@id='contact-form-modal']/div[2]/div/div[1]/div/div/span/div").text
+
+            if (success_text == "Your enquiry has been sent"):
+                print("MESSAGE SENT TO AGENT!")
+            else:
+                print(success_text)
+                error_notify(l)
+                print("error Notifying Agent")
 
         except Exception as e:
             print(e)
             error_notify(l)
-            print("error sending mail")
+            print("error Notifying Agent")
 
     driver.close()
 
