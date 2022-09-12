@@ -25,6 +25,7 @@ def load_environment() -> str:
 def daft_with_filters() -> Daft:
     daft = Daft()
     # daft.set_location(Location.DUBLIN)
+    # [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN]
     daft.set_location(
         [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN], Distance.KM5)
     daft.set_min_beds(os.getenv('rent_min_bedroom'))
