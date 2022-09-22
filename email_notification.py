@@ -33,8 +33,12 @@ def notify(listings: list[Listing]):
 
 def get_message(listings: list[Listing], recipients: list[str], sender: str | None) -> EmailMessage:
     text = "%d new ad(s) found.\n" % (len(listings))
-    for i in listings:
-        text += "-----\n%s\n%s\n%s\n" % (i.title, i.daft_link, i.price)
+    for l in listings:
+        text += "-----\n%s\n%s\n%s\n\nImages:\n" % (
+            l.title, l.daft_link, l.price)
+        for i in l.images:
+            text += "\n%s\n" % (i["size720x480"]) if (
+                "size720x480" in i.keys()) else ""
 
     msg = EmailMessage()
     msg['From'] = "Daft Notification : <%s>" % sender
