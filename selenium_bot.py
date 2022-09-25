@@ -61,7 +61,8 @@ def send_automated_response(listings: list[Listing]):
             time.sleep(5)
 
             success_text = driver.find_element(
-                By.XPATH, "//*[@id='contact-form-modal']/div[2]/div/div[1]/div/div/span/div").text
+                #   "//*[@id='contact-form-modal']/div[2]/div/div[1]/div/div/span/div
+                By.XPATH, "/html/body/div[8]/div/div/div[2]/div/div[1]/div/div/span/div").text
 
             if (success_text == "Your enquiry has been sent"):
                 print("MESSAGE SENT TO AGENT!")
@@ -72,6 +73,7 @@ def send_automated_response(listings: list[Listing]):
 
         except Exception as e:
             print(e)
+            print(driver.page_source.encode("utf-8"))
             error_notify(l)
             print("error Notifying Agent")
 

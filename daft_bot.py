@@ -6,6 +6,7 @@ from daft_bot_utils import load_cache, update_cache, save_images
 from datetime import datetime, timedelta
 import os
 import sys
+from time import time
 
 
 def load_environment() -> str:
@@ -24,10 +25,10 @@ def load_environment() -> str:
 
 def daft_with_filters() -> Daft:
     daft = Daft()
-    # daft.set_location(Location.DUBLIN)
+    daft.set_location(Location.DUBLIN)
     # [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN]
-    daft.set_location(
-        [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN], Distance.KM10)
+    # daft.set_location(
+    #       [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN], Distance.KM10)
     daft.set_min_beds(os.getenv('rent_min_bedroom'))
     daft.set_max_beds(os.getenv('rent_max_bedroom'))
     daft.set_search_type(SearchType.RESIDENTIAL_RENT)
@@ -50,22 +51,26 @@ def get_new_listings(daft: Daft, cache: dict) -> list[Listing]:
 
 
 def main():
+    start_time = time()
     ENV = load_environment()
     print("=====START", ENV,  "=====")
-    IndianTime = datetime.utcnow() + timedelta(hours=5, minutes=30)
-    print(IndianTime.strftime("%m/%d/%Y, %H:%M:%S"))
+    IrishTime = datetime.utcnow() + timedelta(hours=1, minutes=0)
+    print(IrishTime.strftime("%m/%d/%Y, %H:%M:%S"))
 
     daft = daft_with_filters()
     cache = load_cache(os.getenv("cache_file"))
 
     new_listings = get_new_listings(daft, cache)
+    update_cache(cache, os.getenv("cache_file"))
 
     notify(new_listings)
     send_automated_response(new_listings)
 
-    save_images(new_listings)
+    # You should update it late but this is the need of the hour because cron job will make this a mess otherwise
+    # update_cache(cache, os.getenv("cache_file"))
 
-    update_cache(cache, os.getenv("cache_file"))
+    save_images(new_listings)
+    print("My program took", round(time() - start_time, 2), "seconds to run")
     print("Finished :) \n====END======")
 
 

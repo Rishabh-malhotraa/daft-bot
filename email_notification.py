@@ -36,9 +36,15 @@ def get_message(listings: list[Listing], recipients: list[str], sender: str | No
     for l in listings:
         text += "-----\n%s\n%s\n%s\n\nImages:\n" % (
             l.title, l.daft_link, l.price)
-        for i in l.images:
-            text += "\n%s\n" % (i["size720x480"]) if (
-                "size720x480" in i.keys()) else ""
+        text_image = ""
+        try:
+            for i in l.images:
+                text_image += "\n%s\n" % (i["size720x480"]) if (
+                    "size720x480" in i.keys()) else ""
+        except Exception as e:
+            print(e)
+
+        text += text_image
 
     msg = EmailMessage()
     msg['From'] = "Daft Notification : <%s>" % sender
