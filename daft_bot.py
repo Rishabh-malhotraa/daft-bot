@@ -61,13 +61,14 @@ def main():
     cache = load_cache(os.getenv("cache_file"))
 
     new_listings = get_new_listings(daft, cache)
+
+
+    # You should update it late but this is the need of the hour because cron job will make this a mess otherwise
+    # update_cache(cache, os.getenv("cache_file"))
     update_cache(cache, os.getenv("cache_file"))
 
     notify(new_listings)
     send_automated_response(new_listings)
-
-    # You should update it late but this is the need of the hour because cron job will make this a mess otherwise
-    # update_cache(cache, os.getenv("cache_file"))
 
     save_images(new_listings)
     print("My program took", round(time() - start_time, 2), "seconds to run")
