@@ -12,7 +12,7 @@
 > 
 
 
-A housing crisis in Dublin has made finding an house could be extremely hard, this bot is suppose to automate most of the tedious steps, and hopefully help you find a house!Installation
+A housing crisis in Dublin has made finding an house could be extremely hard, this bot is suppose to automate most of the tedious steps, and hopefully help you find a house
 
 
 | Response | Enquiries |
@@ -55,7 +55,7 @@ crontab -e
 
 1. Make sure you have Python3 installed
 2. Have the correct version of selenium driver for Chrome. [Link](https://chromedriver.chromium.org/downloads)
-3. Convert .env.example files -> .env.example with relevant data
+3. Convert .env.example files -> .env with relevant data
 
 ## Meta
 
