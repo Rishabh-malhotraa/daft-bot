@@ -2,6 +2,8 @@ import os
 import time
 from selenium.webdriver import Chrome
 from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from email_notification import error_notify
 from sys import platform
@@ -13,7 +15,7 @@ from daftlistings import Listing
 def get_driver() -> Chrome:
     # linux
     if platform == "linux" or platform == "linux2":
-        driver_location = "/usr/bin/chromedriver"
+        driver_location = "./driver/chromedriver_linux"
         binary_location = "/usr/bin/google-chrome"
 
         options = webdriver.ChromeOptions()
@@ -23,9 +25,19 @@ def get_driver() -> Chrome:
         options.add_argument("window-size=1920x1024")
         options.binary_location = binary_location
         return webdriver.Chrome(executable_path=driver_location, chrome_options=options)
+    elif platform == "darwin":
+        driver_location = "./driver/chromedriver_mac_arm64"
+        options = webdriver.ChromeOptions()
+        options.add_argument("start-maximized")
+        # options.add_argument('--headless')
+        # options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument("window-size=1920x1024")
+        return webdriver.Chrome(executable_path=driver_location, chrome_options=options)
 
     elif platform == "win32":
-        return webdriver.Chrome()
+        driver_location = "./driver/chromedriver_win32.exe"
+        return webdriver.Chrome(executable_path=driver_location)
 
 
 def send_automated_response(listings: list[Listing]):
@@ -38,26 +50,38 @@ def send_automated_response(listings: list[Listing]):
 
     # SEND MESSAGE
     for l in listings:
+        print(l.daft_link)
         try:
             driver.get(l.daft_link)
             # Mail the AGENT Button
-            time.sleep(3)
+            time.sleep(1)
             driver.find_element(By.CLASS_NAME, "cWKcCS").click()
-            time.sleep(3)
+            time.sleep(1)
             driver.find_element(By.ID, "keyword1").send_keys(
                 os.getenv('daft_name'))
-            time.sleep(3)
+            time.sleep(1)
             driver.find_element(By.ID, "keyword2").send_keys(
                 os.getenv("daft_email"))
-            time.sleep(3)
+            time.sleep(1)
             driver.find_element(By.ID, "keyword3").send_keys(
                 os.getenv("daft_phone_number"))
-            time.sleep(3)
+            time.sleep(1)
             driver.find_element(By.ID, "message").send_keys(
                 os.getenv("daft_text"))
-            time.sleep(3)
+
+
+            time.sleep(5)
+
             driver.find_element(
-                By.XPATH, "//*[@data-testid='submit-button']").click()
+                By.XPATH, "/html/body/div[8]/div/div/div[2]/form/div/div[5]/div").click()
+                # By.XPATH, "//*[@data-testid='submit-button']").click()
+                # By.XPATH, "/html/body/div[8]/div/div/div[2]/form/div/div[5]/div/button").click()
+            
+            
+            # submitForm = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[@data-testid='submit-button']")))
+            # submitForm.click()
+            
+            
             time.sleep(5)
 
             success_text = driver.find_element(

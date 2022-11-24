@@ -12,7 +12,7 @@ def load_cache(cache_file="listings.txt"):
             cache[i.strip()] = ""
         f.close()
     except:
-        print("[W] Unable to read cache file. Don't worry if you start from scretch.")
+        print("[W] Unable to read cache file. Don't worry if you start from scratch.")
     return cache
 
 
