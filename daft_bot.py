@@ -28,7 +28,7 @@ def daft_with_filters() -> Daft:
     daft.set_location(Location.DUBLIN)
     # [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN]
     # daft.set_location(
-    #       [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN], Distance.KM10)
+        #   [Location.RANELAGH_DUBLIN, Location.BALLSBRIDGE_DUBLIN, Location.DUBLIN_4_DUBLIN, Location.DONNYBROOK_DUBLIN], Distance.KM10)
     daft.set_min_beds(os.getenv('rent_min_bedroom'))
     daft.set_max_beds(os.getenv('rent_max_bedroom'))
     daft.set_search_type(SearchType.RESIDENTIAL_RENT)
@@ -54,7 +54,7 @@ def main():
     start_time = time()
     ENV = load_environment()
     print("=====START", ENV,  "=====")
-    IrishTime = datetime.utcnow() + timedelta(hours=1, minutes=0)
+    IrishTime = datetime.utcnow() + timedelta(hours=0, minutes=0)
     print(IrishTime.strftime("%m/%d/%Y, %H:%M:%S"))
 
     daft = daft_with_filters()
@@ -64,7 +64,6 @@ def main():
 
 
     # You should update it late but this is the need of the hour because cron job will make this a mess otherwise
-    # update_cache(cache, os.getenv("cache_file"))
     update_cache(cache, os.getenv("cache_file"))
 
     notify(new_listings)

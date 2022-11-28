@@ -1,8 +1,11 @@
+import os
 import sys
 from daftlistings import Listing
 
 
 def load_cache(cache_file="listings.txt"):
+    cwd = os.getcwd()
+    cache_file = cache_file if (cache_file != "") else  os.path.join(cwd, 'listings.txt')
     # load cache if exists
     print("[*] Loading Cache.")
     cache = {}

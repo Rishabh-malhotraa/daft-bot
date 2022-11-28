@@ -29,8 +29,8 @@ def get_driver() -> Chrome:
         driver_location = "./driver/chromedriver_mac_arm64"
         options = webdriver.ChromeOptions()
         options.add_argument("start-maximized")
-        # options.add_argument('--headless')
-        # options.add_argument('--no-sandbox')
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument("window-size=1920x1024")
         return webdriver.Chrome(executable_path=driver_location, chrome_options=options)
@@ -73,11 +73,12 @@ def send_automated_response(listings: list[Listing]):
             time.sleep(5)
 
             driver.find_element(
-                By.XPATH, "/html/body/div[8]/div/div/div[2]/form/div/div[5]/div").click()
+                By.XPATH, "//*[@id='contact-form-modal']/div[2]/form/div/div[5]/div").click()
+
                 # By.XPATH, "//*[@data-testid='submit-button']").click()
                 # By.XPATH, "/html/body/div[8]/div/div/div[2]/form/div/div[5]/div/button").click()
             
-            
+            # FULL XPATH - /html/body/div[7]/div/div/div[2]/form/div/div[5]/div/button
             # submitForm = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[@data-testid='submit-button']")))
             # submitForm.click()
             
@@ -85,8 +86,7 @@ def send_automated_response(listings: list[Listing]):
             time.sleep(5)
 
             success_text = driver.find_element(
-                #   "//*[@id='contact-form-modal']/div[2]/div/div[1]/div/div/span/div
-                By.XPATH, "/html/body/div[8]/div/div/div[2]/div/div[1]/div/div/span/div").text
+                By.XPATH, "//*[@id='contact-form-modal']/div[2]/div/div[1]/div/div/span/div").text
 
             if (success_text == "Your enquiry has been sent"):
                 print("MESSAGE SENT TO AGENT!")
