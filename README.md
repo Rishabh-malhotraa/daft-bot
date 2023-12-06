@@ -30,6 +30,7 @@ Follow the steps to setup the project
 
 Install Python3 from [here](https://www.python.org/downloads/)
 
+Make sure you have  > python 3.11 Installed
 
 ## Installation
 
@@ -56,6 +57,21 @@ crontab -e
 1. Make sure you have Python3 installed
 2. Have the correct version of selenium driver for Chrome. [Link](https://chromedriver.chromium.org/downloads)
 3. Convert .env.example files -> .env with relevant data
+
+
+Commands for running the script
+
+```
+# This would run the script with default values
+python daft_bot.py 
+
+# This would update the cache without applying to any places
+python daft_bot.py --bhk 2 --noop true
+
+
+# This would use cached values on daft while applying
+python daft_bot.py --bhk 2 --fast True
+```
 
 ## Meta
 
