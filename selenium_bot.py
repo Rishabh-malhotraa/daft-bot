@@ -1,16 +1,19 @@
-import os
 import time
 from selenium.webdriver import Chrome
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from email_notification import error_notify
+from email_notification import EmailNotifier
+from config import AppConfig
+from logger import get_logger
 from sys import platform
 from daftlistings import Listing
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
+
+log = get_logger(__name__)
 
 
 # Selenium Send Automted Response
@@ -20,9 +23,7 @@ def get_driver() -> Chrome:
     # linux
     if platform == "linux" or platform == "linux2":
         driver_location = "./driver/chromedriver_linux"
-        binary_location = (
-            "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-        )
+        binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         service = Service(executable_path=driver_location)
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
@@ -36,33 +37,43 @@ def get_driver() -> Chrome:
         options = webdriver.ChromeOptions()
         options.add_argument("start-maximized")
         # options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
+        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920x1024")
-        service=Service(executable_path=driver_location)
+        service = Service(executable_path=driver_location)
         return webdriver.Chrome(service=service, options=options)
 
     elif platform == "win32":
         driver_location = "./driver/chromedriver_win32.exe"
         return webdriver.Chrome(service=Service(executable_path=driver_location))
 
+    else:
+        raise RuntimeError(f"Unsupported platform: {platform}")
 
-def send_automated_response(listings: list[Listing], cache: dict, use_cached_values: bool):
+
+def send_automated_response(
+    listings: list[Listing],
+    cache: dict,
+    use_cached_values: bool,
+    config: AppConfig,
+    email_notifier: EmailNotifier,
+) -> None:
     if len(listings) == 0:
-        return  
+        return
 
     driver = get_driver()
-        
-    try :
-        login_daft(driver)
-    except Exception as e:
-        driver.get_screenshot_as_file('stealth-uc.png')
+    account = config.daft_account
 
+    try:
+        login_daft(driver, account.email, account.password)
+    except Exception as e:
+        log.error(f"Login failed, saving screenshot: {e}")
+        driver.get_screenshot_as_file("stealth-uc.png")
 
     # SEND MESSAGE
     for l in listings:
-        sleep_time=1
-        print(l.daft_link)
+        sleep_time = 1
+        log.info(f"Processing listing: {l.daft_link}")
         try:
             time.sleep(sleep_time)
             driver.get(l.daft_link)
@@ -70,55 +81,71 @@ def send_automated_response(listings: list[Listing], cache: dict, use_cached_val
             time.sleep(sleep_time)
 
             try:
-                popup = driver.find_element(By.CSS_SELECTOR, '[aria-label="Email Agent"]').click()
+                popup = driver.find_element(
+                    By.CSS_SELECTOR, '[aria-label="Email Agent"]'
+                ).click()
                 # If the element is found, you can interact with it here
 
             except NoSuchElementException:
-                popup = driver.find_element(By.CSS_SELECTOR, '[aria-label="Email"]').click()
-            
-            time.sleep(sleep_time*2)
+                popup = driver.find_element(
+                    By.CSS_SELECTOR, '[aria-label="Email"]'
+                ).click()
+
+            time.sleep(sleep_time * 2)
             try:
-                already_applied_text = driver.find_element(By.CSS_SELECTOR, '[data-tracking-id="contact-form-enquired-panel"]')
+                already_applied_text = driver.find_element(
+                    By.CSS_SELECTOR, '[data-tracking-id="contact-form-enquired-panel"]'
+                )
                 continue
             except NoSuchElementException:
                 pass
 
-
-            first_name_field = driver.find_element(By.CSS_SELECTOR, '[aria-label="firstName"]')
-            last_name_field = driver.find_element(By.CSS_SELECTOR, '[aria-label="lastName"]')
-            phone_number_field = driver.find_element(By.CSS_SELECTOR, '[aria-label="phone"]')
+            first_name_field = driver.find_element(
+                By.CSS_SELECTOR, '[aria-label="firstName"]'
+            )
+            last_name_field = driver.find_element(
+                By.CSS_SELECTOR, '[aria-label="lastName"]'
+            )
+            phone_number_field = driver.find_element(
+                By.CSS_SELECTOR, '[aria-label="phone"]'
+            )
             email_field = driver.find_element(By.CSS_SELECTOR, '[aria-label="email"]')
-            number_of_tenants = driver.find_element(By.CSS_SELECTOR, '[data-testid="adultTenants-increment-button"]')
+            number_of_tenants = driver.find_element(
+                By.CSS_SELECTOR, '[data-testid="adultTenants-increment-button"]'
+            )
             daft_message_field = driver.find_element(By.ID, "message")
-            submit_button = driver.find_element(By.CSS_SELECTOR, '[aria-label="Send"][type="submit"][data-testid="submit-button"]')
-            
+            submit_button = driver.find_element(
+                By.CSS_SELECTOR,
+                '[aria-label="Send"][type="submit"][data-testid="submit-button"]',
+            )
+
             if use_cached_values == False:
                 # FIRST NAME
                 driver.execute_script("arguments[0].value = '';", first_name_field)
                 time.sleep(sleep_time)
-                first_name_field.send_keys(os.getenv("daft_first_name"))
+                first_name_field.send_keys(account.first_name)
                 time.sleep(sleep_time)
-                
+
                 # LAST NAME
                 driver.execute_script("arguments[0].value = '';", last_name_field)
                 time.sleep(sleep_time)
-                last_name_field.send_keys(os.getenv("daft_last_name"))
+                last_name_field.send_keys(account.last_name)
                 time.sleep(sleep_time)
 
                 # EMAIL
                 time.sleep(sleep_time)
                 driver.execute_script("arguments[0].value = '';", email_field)
-                email_field.send_keys(os.getenv("daft_email"))
+                email_field.send_keys(account.email)
                 time.sleep(sleep_time)
 
                 # PHONE NUMBER - REMOVE - AND ADD
-                
+
                 driver.execute_script("arguments[0].value = '';", phone_number_field)
                 phone_number_field.click()
 
-                phone_number_field.send_keys(os.getenv("daft_phone_number"))
+                phone_number_field.send_keys(account.phone_number)
                 time.sleep(sleep_time)
-                
+
                 # INCREASE TENANT BUTTON
                 number_of_tenants.click()
 
@@ -126,7 +153,7 @@ def send_automated_response(listings: list[Listing], cache: dict, use_cached_val
 
                 # DAFT MESSAGE
                 driver.execute_script("arguments[0].value = '';", daft_message_field)
-                daft_message_field.send_keys(os.getenv("daft_text"))
+                daft_message_field.send_keys(account.message_text)
                 time.sleep(5)
 
             # # EMAIL AGENT
@@ -144,28 +171,27 @@ def send_automated_response(listings: list[Listing], cache: dict, use_cached_val
             ).text
 
             if success_text == "Your enquiry has been sent":
-                print("MESSAGE SENT TO AGENT!")
+                log.info("Message sent to agent successfully")
             else:
-                print(success_text)
-                error_notify(l)
-                print("error Notifying Agent")
+                log.warning(f"Unexpected response: {success_text}")
+                email_notifier.error_notify(l)
+                log.error("Failed to notify agent")
 
         except Exception as e:
             if l.daft_link in cache:
                 cache.pop(l.daft_link)
-            print(e)
-            # driver.get_screenshot_as_file('stealth-uc.png')
-            # print(driver.page_source.encode("utf-8"))
-            error_notify(l)
-            print("error Notifying Agent")
+            log.error(f"Error processing listing: {e}")
+            email_notifier.error_notify(l)
+            log.error("Error notifying agent")
 
     driver.close()
+
 
 # Selenium UTILS
 
 
-def login_daft(driver: Chrome):
-    print("Navigating to login page")
+def login_daft(driver: Chrome, email: str, password: str) -> None:
+    log.info("Navigating to login page")
     driver.get("https://daft.ie")
 
     time.sleep(1)
@@ -173,30 +199,21 @@ def login_daft(driver: Chrome):
     # Accept Cookies Button
     driver.find_element(By.ID, "didomi-notice-agree-button").click()
 
-
     # Navigate to Sign in PAGE <Clicking button>
     driver.find_element(
         By.CSS_SELECTOR, '[data-testid="top-level-active-nav-link"]'
     ).click()
 
-    print("Did you press the button lol")
+    log.debug("Clicked sign-in button")
 
     # Signin TO DAFT ACCOUNT
-    driver.find_element(
-        By.ID, "username"
-    ).send_keys("")
-    driver.find_element(
-        By.ID, "username"
-    ).send_keys(os.getenv("daft_email"))
-    driver.find_element(
-        By.ID, "password"
-    ).send_keys(os.getenv("daft_password"))
+    driver.find_element(By.ID, "username").send_keys("")
+    driver.find_element(By.ID, "username").send_keys(email)
+    driver.find_element(By.ID, "password").send_keys(password)
 
-    print("Entering DAFT.IE Credentials")
+    log.info("Entering DAFT.IE credentials")
 
     # Press SignIN Button
-    driver.find_element(
-        By.ID, "kc-form-buttons"
-    ).click()
+    driver.find_element(By.ID, "kc-form-buttons").click()
 
-    print("Pressing INPUT BUTTON")
+    log.info("Login submitted")

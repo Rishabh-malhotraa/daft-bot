@@ -1,35 +1,74 @@
 from daftlistings import Daft, Location, SearchType, Distance, Listing
 from dotenv import load_dotenv
-from email_notification import notify
+from email_notification import EmailNotifier
 from selenium_bot import send_automated_response
-from daft_bot_utils import load_cache, update_cache, save_images
-from datetime import datetime, timedelta
-import os
-import sys
+from cache import load_cache, update_cache, save_images
+from config import load_config, AppConfig
+from logger import setup_logging, get_logger
+from datetime import datetime
 from time import time
+from pathlib import Path
 import pytz
 import argparse
-from argparse import Namespace
+import sys
+
+log = get_logger(__name__)
 
 
-def load_environment(args: Namespace) -> str:
-    load_dotenv(os.path.join(os.getcwd(), ".env"))
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Automagically apply to daft listings")
 
-    ENV = args.bhk
-    # ENV = sys.argv[1] if len(sys.argv) > 1 else "2"
+    parser.add_argument(
+        "--env",
+        type=str,
+        default=".env",
+        help="Path to base environment file (default: .env)",
+    )
+    parser.add_argument(
+        "--override",
+        type=str,
+        default=None,
+        help="Path to override environment file (e.g., .2bhk.env)",
+    )
+    parser.add_argument(
+        "--noop",
+        action="store_true",
+        help="No-op mode: only save cache, don't send applications",
+    )
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        default=True,
+        help="Use cached form values when doing automated replies",
+    )
 
-    if ENV == "2":
-        load_dotenv(os.path.join(os.getcwd(), ".2bhk.env"))
-    elif ENV == "3":
-        load_dotenv(os.path.join(os.getcwd(), ".3bhk.env"))
-    elif ENV == "4":
-        load_dotenv(os.path.join(os.getcwd(), ".4bhk.env"))
-    return ENV
+    return parser.parse_args()
 
 
-def daft_with_filters() -> Daft:
+def load_environment(env_file: str, override_file: str | None) -> None:
+    """Load environment variables from files."""
+    env_path = Path(env_file)
+    if not env_path.exists():
+        log.error(f"Environment file not found: {env_path}")
+        sys.exit(1)
+
+    load_dotenv(env_path)
+
+    if override_file:
+        override_path = Path(override_file)
+        if not override_path.exists():
+            log.error(f"Override environment file not found: {override_path}")
+            sys.exit(1)
+        load_dotenv(override_path, override=True)
+        log.info(f"Loaded environment: {env_path.name} + {override_path.name}")
+    else:
+        log.info(f"Loaded environment: {env_path.name}")
+
+
+def create_daft_search(config: AppConfig) -> Daft:
+    """Create Daft search with configured filters."""
     daft = Daft()
-    # daft.set_location(Location.DUBLIN)
     daft.set_location(
         [
             Location.RANELAGH_DUBLIN,
@@ -42,73 +81,68 @@ def daft_with_filters() -> Daft:
         ],
         Distance.KM1,
     )
-    daft.set_min_beds(os.getenv("rent_min_bedroom"))
-    daft.set_max_beds(os.getenv("rent_max_bedroom"))
-    daft.set_min_baths(os.getenv("rent_min_bath"))
+    daft.set_min_beds(config.daft_search.min_beds)
+    daft.set_max_beds(config.daft_search.max_beds)
+    daft.set_min_baths(config.daft_search.min_baths)
     daft.set_search_type(SearchType.RESIDENTIAL_RENT)
-    daft.set_max_price(os.getenv("rent_max_price"))
+    daft.set_max_price(config.daft_search.max_price)
     return daft
 
 
-# search listings on daft and update cache
-
-
-def get_new_listings(daft: Daft, cache: dict) -> list[Listing]:
+def get_new_listings(daft: Daft, cache: dict[str, str]) -> list[Listing]:
+    """Search listings and return ones not in cache."""
     new_listings = []
-    listings = daft.search()
-    for l in listings:
-        if l.daft_link in cache:
-            continue
-        new_listings.append(l)
-        cache[l.daft_link] = ""
-    print("[*] %d new listing(s) found." % len(new_listings))
+    for listing in daft.search():
+        if listing.daft_link not in cache:
+            new_listings.append(listing)
+            cache[listing.daft_link] = ""
+    log.info(f"{len(new_listings)} new listing(s) found")
     return new_listings
 
-def print_listings(listings: list[Listing]):
-    for listing in listings:
-        print(listing.daft_link)
 
-def main():
-    parser = argparse.ArgumentParser(description='Automagically apply to daft listings')
+def log_current_time() -> None:
+    """Log current time in Irish timezone."""
+    current_time = datetime.now(pytz.timezone("Europe/Dublin"))
+    log.info(f"Current time (Dublin): {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    parser.add_argument('--noop', type=bool, default=False, help='No-op only save cache.')
-    parser.add_argument('--bhk', type=str, default="2", help='BHK file to get env from.')
-    parser.add_argument('--fast', type=bool, default=True, help='Should use cached values when doing automated replies')
 
-    args = parser.parse_args()
+def main() -> None:
+    args = parse_args()
+
+    # Setup logging first
+    setup_logging()
+    log.info("===== DAFT BOT STARTED =====")
 
     start_time = time()
-    ENV = load_environment(args)
-    print("=====START", ENV, "=====")
-    # Set the time zone to Ireland
-    IrishTimeZone = pytz.timezone("Europe/Dublin")
 
-    # Get the current time in the Irish time zone
-    current_time = datetime.now(IrishTimeZone)
+    # Setup
+    load_environment(args.env, args.override)
+    config = load_config()
+    log_current_time()
 
-    print(current_time.strftime("%m/%d/%Y, %H:%M:%S"))
+    # Search for new listings
+    cache = load_cache(config.daft_search.cache_file)
+    new_listings = get_new_listings(create_daft_search(config), cache)
 
-    daft = daft_with_filters()
-    cache = load_cache(os.getenv("cache_file"))
+    for listing in new_listings:
+        log.debug(f"New listing: {listing.daft_link}")
 
-    new_listings = get_new_listings(daft, cache)
+    # Notify and apply
+    email_notifier = EmailNotifier(config.email)
+    email_notifier.notify(new_listings)
 
-    print_listings(new_listings)
+    if not args.noop:
+        send_automated_response(new_listings, cache, args.fast, config, email_notifier)
+    else:
+        log.info("Noop mode: skipping automated responses")
 
-    # You should update it late but this is the need of the hour because cron job will make this a mess otherwise
-    # update_cache(cache, os.getenv("cache_file"))
-
-    notify(new_listings)
-
-    # remove all the listings which failed to be executed
-    if args.noop == False :
-        send_automated_response(new_listings, cache, args.fast)
-
-    update_cache(cache, os.getenv("cache_file"))
-
+    # Save state
+    update_cache(cache, config.daft_search.cache_file)
     save_images(new_listings)
-    print("My program took", round(time() - start_time, 2), "seconds to run")
-    print("Finished :) \n====END======")
+
+    elapsed = round(time() - start_time, 2)
+    log.info(f"Completed in {elapsed} seconds")
+    log.info("===== DAFT BOT FINISHED =====")
 
 
 if __name__ == "__main__":

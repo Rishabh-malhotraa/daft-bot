@@ -1,91 +1,86 @@
 from email.message import EmailMessage
-import os
 import smtplib
 import sys
 from daftlistings import Listing
+from config import EmailConfig
+from logger import get_logger
+
+log = get_logger(__name__)
 
 
-# Sends Mail to Users about listings
-def notify(listings: list[Listing]):
-    recipients = os.getenv('recipients').split(',')
-    sender = os.getenv("sender_email")
-    if len(listings) > 0:
-        msg = get_message(listings, recipients, sender)
+class EmailNotifier:
+    """Handles email notifications for Daft listings."""
 
+    def __init__(self, config: EmailConfig):
+        """Initialize EmailNotifier with configuration."""
+        self.config = config
+
+    def notify(self, listings: list[Listing]) -> None:
+        """Send notification email about new listings."""
+        if len(listings) > 0:
+            msg = self._build_listings_message(listings)
+            self._send_email(msg)
+
+    def error_notify(self, listing: Listing) -> None:
+        """Send notification email when automated message fails."""
+        msg = self._build_error_message(listing)
+        self._send_email(msg)
+
+    def _create_smtp_connection(self) -> smtplib.SMTP:
+        """Create and configure SMTP connection."""
         try:
-            server = smtplib.SMTP(
-                os.getenv("email_server"), os.getenv("email_port"))
-        except:
-            print(
-                "[E] Unable to connect to email server, please check os.getenv(")
-            sys.exit(-1)
-        # server.set_debuglevel(True)
+            server = smtplib.SMTP(self.config.server, self.config.port)
+        except ValueError as e:
+            log.error(f"Configuration error: {e}")
+            sys.exit(1)
+        except Exception as e:
+            log.error(f"Unable to connect to email server: {e}")
+            sys.exit(1)
+
         server.ehlo()
         server.starttls()
         server.ehlo()
-        server.login(os.getenv("email_user"), os.getenv("email_password"))
-        server.sendmail(sender, recipients, msg.as_string(unixfrom=True))
-        server.quit()
-        print("[*] Email Send.")
+        server.login(self.config.user, self.config.password)
+        return server
 
-# Notify helper function
-
-
-def get_message(listings: list[Listing], recipients: list[str], sender: str | None) -> EmailMessage:
-    text = "%d new ad(s) found.\n" % (len(listings))
-    for l in listings:
-        text += "-----\n%s\n%s\n%s\n\nImages:\n" % (
-            l.title, l.daft_link, l.price)
-        text_image = ""
+    def _send_email(self, msg: EmailMessage) -> None:
+        """Send email using SMTP."""
+        server = self._create_smtp_connection()
         try:
-            for i in l.images:
-                text_image += "\n%s\n" % (i["size720x480"]) if (
-                    "size720x480" in i.keys()) else ""
-        except Exception as e:
-            print(e)
+            server.sendmail(
+                self.config.sender, self.config.recipients, msg.as_string(unixfrom=True)
+            )
+        finally:
+            server.quit()
+        log.info("Email sent successfully")
 
-        text += text_image
+    def _build_listings_message(self, listings: list[Listing]) -> EmailMessage:
+        """Build email message for listing notifications."""
+        text = f"{len(listings)} new ad(s) found.\n"
+        for listing in listings:
+            text += f"-----\n{listing.title}\n{listing.daft_link}\n{listing.price}\n\nImages:\n"
+            try:
+                for img in listing.images:
+                    if "size720x480" in img:
+                        text += f"\n{img['size720x480']}\n"
+            except Exception as e:
+                log.warning(f"Error processing listing images: {e}")
 
-    msg = EmailMessage()
-    msg['From'] = "Daft Notification : <%s>" % sender
-    msg['To'] = ", ".join(recipients)
-    msg['Subject'] = os.getenv("email_subject")
-    msg.set_content(text)
-    return msg
+        msg = EmailMessage()
+        msg["From"] = f"Daft Notification : <{self.config.sender}>"
+        msg["To"] = ", ".join(self.config.recipients)
+        msg["Subject"] = self.config.subject
+        msg.set_content(text)
+        return msg
 
+    def _build_error_message(self, listing: Listing) -> EmailMessage:
+        """Build email message for error notifications."""
+        text = "Unable to send automated message to agent\n"
+        text += f"-----\n{listing.title}\n{listing.daft_link}\n{listing.price}\n"
 
-# ERROR NOTIFY
-
-def error_notify(listing: list[Listing]):
-    recipients = os.getenv('recipients').split(',')
-    sender = os.getenv("sender_email")
-    msg = get_error_message(listing, recipients, sender)
-
-    try:
-        server = smtplib.SMTP(
-            os.getenv("email_server"), os.getenv("email_port"))
-    except:
-        print(
-            "[E] Unable to connect to email server, please check os.getenv(")
-        sys.exit(-1)
-    # server.set_debuglevel(True)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-    server.login(os.getenv("email_user"), os.getenv("email_password"))
-    server.sendmail(sender, recipients, msg.as_string(unixfrom=True))
-    server.quit()
-    print("[*] Email Send.")
-
-
-def get_error_message(listing: Listing, recipients: list[str], sender: str | None) -> EmailMessage:
-    text = "Unable to send automated message to agent"
-    text += "-----\n%s\n%s\n%s\n" % (listing.title,
-                                     listing.daft_link, listing.price)
-
-    msg = EmailMessage()
-    msg['From'] = "Daft Notification : <%s>" % sender
-    msg['To'] = ", ".join(recipients)
-    msg['Subject'] = "Unable To send Automated Message: "
-    msg.set_content(text)
-    return msg
+        msg = EmailMessage()
+        msg["From"] = f"Daft Notification : <{self.config.sender}>"
+        msg["To"] = ", ".join(self.config.recipients)
+        msg["Subject"] = "Unable To Send Automated Message"
+        msg.set_content(text)
+        return msg

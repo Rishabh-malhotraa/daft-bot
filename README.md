@@ -56,22 +56,34 @@ crontab -e
 
 1. Make sure you have Python3 installed
 2. Have the correct version of selenium driver for Chrome. [Link](https://chromedriver.chromium.org/downloads)
-3. Convert .env.example files -> .env with relevant data
+3. Copy `.env.example` to your environment file (e.g., `.env`, `.2bhk.env`) and fill in your details
 
 
-Commands for running the script
+## Usage
 
+```bash
+# Run with default .env file only
+python daft_bot.py
+
+# Run with base .env and override with specific config
+python daft_bot.py --override .2bhk.env
+python daft_bot.py --override .3bhk.env
+
+# No-op mode: search and cache listings without sending applications
+python daft_bot.py --override .2bhk.env --noop
+
+# Disable fast mode (re-enter form values instead of using cached)
+python daft_bot.py --override .2bhk.env --no-fast
 ```
-# This would run the script with default values
-python daft_bot.py 
 
-# This would update the cache without applying to any places
-python daft_bot.py --bhk 2 --noop true
+### Command Line Options
 
-
-# This would use cached values on daft while applying
-python daft_bot.py --bhk 2 --fast True
-```
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--env` | `.env` | Path to base environment file |
+| `--override` | none | Path to override environment file (e.g., .2bhk.env) |
+| `--noop` | false | Only search and cache, don't send applications |
+| `--fast` | true | Use cached form values when applying |
 
 ## Meta
 
