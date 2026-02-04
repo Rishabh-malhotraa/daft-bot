@@ -2,8 +2,8 @@ from email.message import EmailMessage
 import smtplib
 import sys
 from daftlistings import Listing
-from config import EmailConfig
-from logger import get_logger
+from .config import EmailConfig
+from .logger import get_logger
 
 log = get_logger(__name__)
 

@@ -4,9 +4,9 @@ from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from email_notification import EmailNotifier
-from config import AppConfig
-from logger import get_logger
+from .email_notification import EmailNotifier
+from .config import AppConfig
+from .logger import get_logger
 from sys import platform
 from daftlistings import Listing
 from selenium.webdriver.chrome.service import Service
