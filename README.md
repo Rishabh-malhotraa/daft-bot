@@ -34,6 +34,13 @@ Make sure you have  > python 3.11 Installed
 
 ## Installation
 
+### Using Poetry (recommended)
+```bash
+pip install poetry
+poetry install
+```
+
+### Using pip
 ```bash
 pip install -r requirements.txt
 ```
@@ -49,15 +56,16 @@ daft-bot/
 │   ├── email_notification.py # Email notifications
 │   ├── selenium_bot.py      # Browser automation
 │   └── logger.py            # Logging setup
-├── driver/                  # Chrome WebDriver binaries
+├── pyproject.toml           # Poetry configuration
+├── poetry.lock              # Locked dependencies
 ├── .env.example             # Example environment config
-└── requirements.txt
+└── requirements.txt         # Fallback for pip users
 ```
 
 ## Setup
 
 1. Make sure you have Python 3.11+ installed
-2. Install dependencies: `pip install -r requirements.txt`
+2. Install dependencies: `poetry install` (or `pip install -r requirements.txt`)
 3. Chrome browser must be installed (driver is auto-managed via `webdriver-manager`)
 4. Copy `.env.example` to `.env` and fill in your details
 5. Optionally create override files (`.2bhk.env`, `.3bhk.env`) for different search configs
@@ -65,12 +73,15 @@ daft-bot/
 ## Usage
 
 ```bash
-# Run with default .env file
-python -m daft_bot
+# Using Poetry
+poetry run daft-bot --override .2bhk.env
 
-# Run with base .env and override with specific config
+# Or activate the shell first
+poetry shell
 python -m daft_bot --override .2bhk.env
-python -m daft_bot --override .3bhk.env
+
+# Using pip/venv
+python -m daft_bot --override .2bhk.env
 
 # No-op mode: search and cache listings without sending applications
 python -m daft_bot --override .2bhk.env --noop

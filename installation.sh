@@ -19,15 +19,13 @@ wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.de
 sudo apt install -y ./google-chrome-stable_current_amd64.deb
 rm google-chrome-stable_current_amd64.deb
 
-# Create virtual environment
-echo "[*] Setting up Python virtual environment..."
-python3 -m venv .venv
-source .venv/bin/activate
+# Install Poetry
+echo "[*] Installing Poetry..."
+pip install --user poetry
 
-# Install dependencies
+# Install dependencies with Poetry
 echo "[*] Installing Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+poetry install
 
 # Setup environment file
 if [ ! -f .env ]; then
@@ -41,6 +39,6 @@ echo "=== Installation Complete ==="
 echo ""
 echo "Next steps:"
 echo "  1. Edit .env with your credentials"
-echo "  2. Activate venv: source .venv/bin/activate"
-echo "  3. Run: python -m daft_bot"
+echo "  2. Run: poetry run daft-bot --override .2bhk.env"
+echo "     Or:  poetry shell && python -m daft_bot"
 echo ""

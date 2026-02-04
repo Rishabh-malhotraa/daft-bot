@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "daft-bot"
+version = "1.0.0"
+description = "AutoMagically apply to new listings on Daft.ie based on your filters"
+authors = ["Rishabh Malhotra <rishabhmalhotraa01@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/Rishabh-Malhotraa/daft-bot"
+packages = [{ include = "daft_bot" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+daftlistings = "^2.0.5"
+python-dotenv = "^1.2.1"
+pytz = "^2025.2"
+requests = "^2.32.5"
+selenium = "^4.40.0"
+webdriver-manager = "^4.0.2"
+
+[tool.poetry.group.dev.dependencies]
+# Add dev dependencies here if needed
+# pytest = "^8.0"
+# ruff = "^0.1"
+
+[tool.poetry.scripts]
+daft-bot = "daft_bot.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
