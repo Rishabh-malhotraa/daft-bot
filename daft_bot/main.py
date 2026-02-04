@@ -1,7 +1,7 @@
 from daftlistings import Daft, Location, SearchType, Distance, Listing
 from dotenv import load_dotenv
 from .email_notification import EmailNotifier
-from .selenium_bot import send_automated_response
+from .selenium_bot import DaftBot
 from .cache import load_cache, update_cache, save_images
 from .config import load_config, AppConfig
 from .logger import setup_logging, get_logger
@@ -41,6 +41,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         default=True,
         help="Use cached form values when doing automated replies",
+    )
+    parser.add_argument(
+        "--visible",
+        action="store_true",
+        help="Show browser window (for local testing on Mac/Windows)",
     )
 
     return parser.parse_args()
@@ -139,7 +144,12 @@ def main() -> None:
     email_notifier.notify(new_listings)
 
     if not args.noop:
-        send_automated_response(new_listings, cache, args.fast, config, email_notifier)
+        bot = DaftBot(
+            config=config,
+            email_notifier=email_notifier,
+            headless=not args.visible,
+        )
+        bot.process_listings(new_listings, cache, use_cached_values=args.fast)
     else:
         log.info("Noop mode: skipping automated responses")
 

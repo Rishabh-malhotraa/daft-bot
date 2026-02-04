@@ -58,7 +58,7 @@ daft-bot/
 
 1. Make sure you have Python 3.11+ installed
 2. Install dependencies: `pip install -r requirements.txt`
-3. Have the correct version of Chrome WebDriver for your system in `driver/`. [Download here](https://chromedriver.chromium.org/downloads)
+3. Chrome browser must be installed (driver is auto-managed via `webdriver-manager`)
 4. Copy `.env.example` to `.env` and fill in your details
 5. Optionally create override files (`.2bhk.env`, `.3bhk.env`) for different search configs
 
@@ -77,6 +77,9 @@ python -m daft_bot --override .2bhk.env --noop
 
 # Disable fast mode (re-enter form values instead of using cached)
 python -m daft_bot --override .2bhk.env --no-fast
+
+# Local testing with visible browser (Mac/Windows)
+python -m daft_bot --override .2bhk.env --visible
 ```
 
 ### Command Line Options
@@ -87,19 +90,70 @@ python -m daft_bot --override .2bhk.env --no-fast
 | `--override` | none | Path to override environment file (e.g., .2bhk.env) |
 | `--noop` | false | Only search and cache, don't send applications |
 | `--fast` | true | Use cached form values when applying |
+| `--visible` | false | Show browser window (for local testing on Mac/Windows) |
 
-### Running on a Schedule (Cron)
+## Running on Ubuntu Server (Cron)
 
-To run the bot periodically (e.g., every minute):
+### Quick Setup
 
 ```bash
-crontab -e
+# Clone and install
+git clone https://github.com/Rishabh-Malhotraa/daft-bot.git
+cd daft-bot
+chmod +x installation.sh
+./installation.sh
 
-# Add this line:
-*/1 * * * * cd ~/daft-bot && python -m daft_bot --override .2bhk.env >> ~/daft-bot/daft_bot.log 2>&1
+# Configure
+cp .env.example .env
+nano .env  # Fill in your credentials
 ```
 
-Logs are automatically written to `daft_bot.log` with rotation.
+### Setting Up Cron
+
+The bot is designed to run headless on a server. Each run searches for new listings and applies to any found.
+
+```bash
+# Edit crontab
+crontab -e
+
+# Run every 5 minutes for 2BHK search
+*/5 * * * * cd /home/ubuntu/daft-bot && /home/ubuntu/daft-bot/.venv/bin/python -m daft_bot --override .2bhk.env
+
+# Run multiple searches with different configs
+*/5 * * * * cd /home/ubuntu/daft-bot && /home/ubuntu/daft-bot/.venv/bin/python -m daft_bot --override .2bhk.env
+*/5 * * * * cd /home/ubuntu/daft-bot && /home/ubuntu/daft-bot/.venv/bin/python -m daft_bot --override .3bhk.env
+```
+
+### Cron Tips
+
+- **Use absolute paths** for both the working directory and Python executable
+- Each override config gets its own log file: `daft_bot_2bhk.log`, `daft_bot_3bhk.log`
+- Screenshots are saved to `screenshots/` folder when errors occur
+- Check logs: `tail -f daft_bot_2bhk.log`
+
+### Logging
+
+Logs automatically rotate at 10MB with 3 backups. Log files are named based on your override file:
+- `--override .2bhk.env` → `daft_bot_2bhk.log`
+- `--override .3bhk.env` → `daft_bot_3bhk.log`
+- No override → `daft_bot.log`
+
+### Troubleshooting Server Issues
+
+```bash
+# Check if Chrome is installed
+google-chrome --version
+
+# Test headless mode manually
+source .venv/bin/activate
+python -m daft_bot --override .2bhk.env --noop
+
+# View recent cron runs
+grep CRON /var/log/syslog | tail -20
+
+# Check screenshots for failures
+ls -la screenshots/
+```
 
 ## Meta
 
