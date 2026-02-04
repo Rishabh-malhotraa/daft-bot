@@ -1,43 +1,46 @@
-#!/bin/env bash
+#!/bin/bash
 
+set -e  # Exit on error
 
-sudo apt install wget
+echo "=== Daft Bot Installation ==="
 
-# installation file for Ubunutu Debian
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo apt install ./google-chrome-stable_current_amd64.deb
-cat /etc/apt/sources.list.d/google-chrome.list
+# Update system
+echo "[*] Updating system packages..."
+sudo apt update && sudo apt upgrade -y
 
-# Installing Chrome on Centos
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
-sudo yum localinstall google-chrome-stable_current_x86_64.rpm
-sudo yum upgrade google-chrome-stable
+# Install Python 3.11+
+echo "[*] Installing Python..."
+sudo apt install -y python3 python3-pip python3-venv
 
-# ================================
-# Installing pyenv for Python 3.11 in cases you did not have Python 3.11
-# This is for Type error that you might get
+# Install Chrome (for Selenium)
+echo "[*] Installing Google Chrome..."
+sudo apt install -y wget
+wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install -y ./google-chrome-stable_current_amd64.deb
+rm google-chrome-stable_current_amd64.deb
 
-curl https://pyenv.run | bash
+# Create virtual environment
+echo "[*] Setting up Python virtual environment..."
+python3 -m venv .venv
+source .venv/bin/activate
 
-# ~/.zshrc
+# Install dependencies
+echo "[*] Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
 
-# PYENV
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
+# Setup environment file
+if [ ! -f .env ]; then
+    echo "[*] Creating .env from example..."
+    cp .env.example .env
+    echo "[!] Please edit .env with your credentials"
+fi
 
-
-
-# PYENV Auto-completions. This should be towards the end of the file.
-eval "$(pyenv init -)"
-
-# ================================
-
-sudo apt update
-
-sudo apt upgrade
-
-sudo apt install python3
-sudo apt install python3-pip
-
-# In cases Python does not have execute permission where the dependencies are installed
-sudo chmod -R ugo+rX /lib/python2.7/site-packages/
+echo ""
+echo "=== Installation Complete ==="
+echo ""
+echo "Next steps:"
+echo "  1. Edit .env with your credentials"
+echo "  2. Activate venv: source .venv/bin/activate"
+echo "  3. Run: python -m daft_bot"
+echo ""

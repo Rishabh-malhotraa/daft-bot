@@ -34,46 +34,49 @@ Make sure you have  > python 3.11 Installed
 
 ## Installation
 
-``` python
- pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
 ```
 
-Run the script
+## Project Structure
 
-``` sh
- sh script.sh
+```
+daft-bot/
+├── daft_bot/
+│   ├── main.py              # Main entry point
+│   ├── config.py            # Configuration management
+│   ├── cache.py             # Listing cache operations
+│   ├── email_notification.py # Email notifications
+│   ├── selenium_bot.py      # Browser automation
+│   └── logger.py            # Logging setup
+├── driver/                  # Chrome WebDriver binaries
+├── .env.example             # Example environment config
+└── requirements.txt
 ```
 
-If you want to run the script priodically every 1 minute, you need to run a cron job to run the `sh script.sh` command, what I recommend is to setup an EC2 instance on AWS (I work at AWS :P) or use a droplet on digital ocean. 
+## Setup
 
-``` sh
-crontab -e
-
-*/1 * * * * sh ~/daft-bot/script.sh
-# SPECIFY THE LOCATION OF THE SCRIPT 
-```
-
-
-1. Make sure you have Python3 installed
-2. Have the correct version of selenium driver for Chrome. [Link](https://chromedriver.chromium.org/downloads)
-3. Copy `.env.example` to your environment file (e.g., `.env`, `.2bhk.env`) and fill in your details
-
+1. Make sure you have Python 3.11+ installed
+2. Install dependencies: `pip install -r requirements.txt`
+3. Have the correct version of Chrome WebDriver for your system in `driver/`. [Download here](https://chromedriver.chromium.org/downloads)
+4. Copy `.env.example` to `.env` and fill in your details
+5. Optionally create override files (`.2bhk.env`, `.3bhk.env`) for different search configs
 
 ## Usage
 
 ```bash
-# Run with default .env file only
-python daft_bot.py
+# Run with default .env file
+python -m daft_bot
 
 # Run with base .env and override with specific config
-python daft_bot.py --override .2bhk.env
-python daft_bot.py --override .3bhk.env
+python -m daft_bot --override .2bhk.env
+python -m daft_bot --override .3bhk.env
 
 # No-op mode: search and cache listings without sending applications
-python daft_bot.py --override .2bhk.env --noop
+python -m daft_bot --override .2bhk.env --noop
 
 # Disable fast mode (re-enter form values instead of using cached)
-python daft_bot.py --override .2bhk.env --no-fast
+python -m daft_bot --override .2bhk.env --no-fast
 ```
 
 ### Command Line Options
@@ -84,6 +87,19 @@ python daft_bot.py --override .2bhk.env --no-fast
 | `--override` | none | Path to override environment file (e.g., .2bhk.env) |
 | `--noop` | false | Only search and cache, don't send applications |
 | `--fast` | true | Use cached form values when applying |
+
+### Running on a Schedule (Cron)
+
+To run the bot periodically (e.g., every minute):
+
+```bash
+crontab -e
+
+# Add this line:
+*/1 * * * * cd ~/daft-bot && python -m daft_bot --override .2bhk.env >> ~/daft-bot/daft_bot.log 2>&1
+```
+
+Logs are automatically written to `daft_bot.log` with rotation.
 
 ## Meta
 

@@ -109,8 +109,15 @@ def log_current_time() -> None:
 def main() -> None:
     args = parse_args()
 
+    # Derive log file name from override file (e.g., .2bhk.env -> daft_bot_2bhk.log)
+    if args.override:
+        override_name = Path(args.override).stem.lstrip(".")  # ".2bhk" -> "2bhk"
+        log_file = f"daft_bot_{override_name}.log"
+    else:
+        log_file = "daft_bot.log"
+
     # Setup logging first
-    setup_logging()
+    setup_logging(log_file=log_file)
     log.info("===== DAFT BOT STARTED =====")
 
     start_time = time()
