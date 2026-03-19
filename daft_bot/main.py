@@ -2,7 +2,7 @@ from daftlistings import Daft, Location, SearchType, Distance, Listing
 from dotenv import load_dotenv
 from .email_notification import EmailNotifier
 from .selenium_bot import DaftBot
-from .cache import load_cache, update_cache, save_images
+from .cache import load_seen, save_seen, save_images
 from .config import load_config, AppConfig
 from .logger import setup_logging, get_logger
 from datetime import datetime
@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--noop",
         action="store_true",
-        help="No-op mode: only save cache, don't send applications",
+        help="No-op mode: only save seen listings, don't send applications",
     )
     parser.add_argument(
         "--fast",
@@ -94,13 +94,13 @@ def create_daft_search(config: AppConfig) -> Daft:
     return daft
 
 
-def get_new_listings(daft: Daft, cache: dict[str, str]) -> list[Listing]:
-    """Search listings and return ones not in cache."""
+def get_new_listings(daft: Daft, seen: set[str]) -> list[Listing]:
+    """Search listings and return ones not already seen."""
     new_listings = []
     for listing in daft.search():
-        if listing.daft_link not in cache:
+        if listing.daft_link not in seen:
             new_listings.append(listing)
-            cache[listing.daft_link] = ""
+            seen.add(listing.daft_link)
     log.info(f"{len(new_listings)} new listing(s) found")
     return new_listings
 
@@ -133,8 +133,8 @@ def main() -> None:
     log_current_time()
 
     # Search for new listings
-    cache = load_cache(config.daft_search.cache_file)
-    new_listings = get_new_listings(create_daft_search(config), cache)
+    seen = load_seen(config.daft_search.cache_file)
+    new_listings = get_new_listings(create_daft_search(config), seen)
 
     for listing in new_listings:
         log.debug(f"New listing: {listing.daft_link}")
@@ -149,12 +149,12 @@ def main() -> None:
             email_notifier=email_notifier,
             headless=not args.visible,
         )
-        bot.process_listings(new_listings, cache, use_cached_values=args.fast)
+        bot.process_listings(new_listings, seen, use_cached_values=args.fast)
     else:
         log.info("Noop mode: skipping automated responses")
 
     # Save state
-    update_cache(cache, config.daft_search.cache_file)
+    save_seen(seen, config.daft_search.cache_file)
     save_images(new_listings)
 
     elapsed = round(time() - start_time, 2)

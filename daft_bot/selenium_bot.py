@@ -3,7 +3,7 @@ Selenium automation for applying to Daft.ie listings.
 
 Usage:
     bot = DaftBot(config, email_notifier, headless=True)
-    bot.process_listings(listings, cache, use_cached_values=True)
+    bot.process_listings(listings, seen, use_cached_values=True)
 """
 
 import time
@@ -35,15 +35,17 @@ from .logger import get_logger
 log = get_logger(__name__)
 
 
-
 class DaftLoginError(Exception):
     """Raised when login to Daft.ie fails."""
+
     pass
 
 
 class DaftSubmissionError(Exception):
     """Raised when form submission fails."""
+
     pass
+
 
 class DaftBot:
     """
@@ -51,7 +53,7 @@ class DaftBot:
 
     Usage:
         bot = DaftBot(config, email_notifier, headless=True)
-        bot.process_listings(listings, cache, use_cached_values=True)
+        bot.process_listings(listings, seen, use_cached_values=True)
 
     The bot handles:
         - Browser setup and cleanup
@@ -107,7 +109,7 @@ class DaftBot:
     def process_listings(
         self,
         listings: list["Listing"],
-        cache: dict,
+        seen: set[str],
         use_cached_values: bool = True,
     ) -> None:
         """
@@ -115,7 +117,7 @@ class DaftBot:
 
         Args:
             listings: List of Daft listings to apply to.
-            cache: Cache dict to track applied listings.
+            seen: Set of already-seen listing URLs.
             use_cached_values: If True, use cached form values.
         """
         if not listings:
@@ -129,7 +131,7 @@ class DaftBot:
             self._login()
 
             for listing in listings:
-                self._process_single_listing(listing, cache, use_cached_values)
+                self._process_single_listing(listing, seen, use_cached_values)
                 time.sleep(2)  # Delay between listings to avoid rate limiting
 
         except DaftLoginError as e:
@@ -239,7 +241,9 @@ class DaftBot:
 
             if "login" in self.driver.current_url.lower():
                 self._take_screenshot("login_failed")
-                raise DaftLoginError("Login appears to have failed - still on login page")
+                raise DaftLoginError(
+                    "Login appears to have failed - still on login page"
+                )
 
             log.info("Login successful")
 
@@ -250,7 +254,7 @@ class DaftBot:
     def _process_single_listing(
         self,
         listing: "Listing",
-        cache: dict,
+        seen: set[str],
         use_cached_values: bool,
     ) -> None:
         """Process a single listing with error handling."""
@@ -258,16 +262,16 @@ class DaftBot:
             success = self._apply_to_listing(listing, use_cached_values)
 
             if not success:
-                self._handle_failure(listing, cache)
+                self._handle_failure(listing, seen)
 
         except WebDriverException as e:
             log.error(f"WebDriver error for {listing.daft_link}: {e}")
-            self._handle_failure(listing, cache)
+            self._handle_failure(listing, seen)
             self._take_screenshot("webdriver_error")
 
         except Exception as e:
             log.error(f"Unexpected error for {listing.daft_link}: {e}")
-            self._handle_failure(listing, cache)
+            self._handle_failure(listing, seen)
 
     def _apply_to_listing(self, listing: "Listing", use_cached_values: bool) -> bool:
         """
@@ -345,10 +349,9 @@ class DaftBot:
             self._take_screenshot("no_success_message")
             return False
 
-    def _handle_failure(self, listing: "Listing", cache: dict) -> None:
+    def _handle_failure(self, listing: "Listing", seen: set[str]) -> None:
         """Handle a failed listing application."""
-        if listing.daft_link in cache:
-            cache.pop(listing.daft_link)
+        seen.discard(listing.daft_link)
         self.email_notifier.error_notify(listing)
 
     # =========================================================================

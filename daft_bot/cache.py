@@ -6,37 +6,37 @@ from .logger import get_logger
 log = get_logger(__name__)
 
 
-def load_cache(cache_file: str) -> dict[str, str]:
-    """Load cache from file. Returns empty dict if file doesn't exist."""
-    cache_path = Path(cache_file)
-    log.info("Loading cache")
+def load_seen(seen_file: str) -> set[str]:
+    """Load seen listings from file. Returns empty set if file doesn't exist."""
+    seen_path = Path(seen_file)
+    log.info("Loading seen listings")
 
-    cache: dict[str, str] = {}
+    seen: set[str] = set()
     try:
-        with open(cache_path, "r") as f:
+        with open(seen_path, "r", encoding="utf-8") as f:
             for line in f:
                 stripped = line.strip()
                 if stripped:  # Skip empty lines
-                    cache[stripped] = ""
-        log.debug(f"Loaded {len(cache)} entries from cache")
+                    seen.add(stripped)
+        log.debug(f"Loaded {len(seen)} seen listings")
     except FileNotFoundError:
-        log.warning("Cache file not found. Starting fresh.")
+        log.warning("Seen file not found. Starting fresh.")
     except PermissionError as e:
-        log.error(f"Permission denied reading cache file: {e}")
+        log.error(f"Permission denied reading seen file: {e}")
 
-    return cache
+    return seen
 
 
-def update_cache(cache: dict[str, str], cache_file: str) -> None:
-    """Write cache to file."""
-    cache_path = Path(cache_file)
+def save_seen(seen: set[str], seen_file: str) -> None:
+    """Write seen listings to file."""
+    seen_path = Path(seen_file)
     try:
-        with open(cache_path, "w") as f:
-            for key in cache:
-                f.write(f"{key}\n")
-        log.info(f"Cache updated ({len(cache)} entries)")
+        with open(seen_path, "w", encoding="utf-8") as f:
+            for entry in sorted(seen):  # Sort for deterministic output
+                f.write(f"{entry}\n")
+        log.info(f"Saved {len(seen)} seen listings")
     except (IOError, OSError) as e:
-        log.error(f"Unable to write cache file: {e}")
+        log.error(f"Unable to write seen file: {e}")
         sys.exit(1)
 
 
