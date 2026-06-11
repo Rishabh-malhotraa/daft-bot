@@ -352,7 +352,10 @@ class DaftBot:
     def _handle_failure(self, listing: "Listing", seen: set[str]) -> None:
         """Handle a failed listing application."""
         seen.discard(listing.daft_link)
-        self.email_notifier.error_notify(listing)
+        try:
+            self.email_notifier.error_notify(listing)
+        except Exception as e:
+            log.warning(f"Failed to send error notification: {e}")
 
     # =========================================================================
     # Helper Methods
@@ -419,14 +422,19 @@ class DaftBot:
         except Exception as e:
             log.error(f"Error filling field '{field_name}': {e}")
             raise
+            raise
 
-    def _take_screenshot(self, name: str) -> str:
-        """Take a screenshot with timestamp for debugging."""
-        screenshots_dir = Path("screenshots")
-        screenshots_dir.mkdir(exist_ok=True)
+    def _take_screenshot(self, name: str) -> str | None:
+        """Take a screenshot with timestamp for debugging. Returns None on failure."""
+        try:
+            screenshots_dir = Path("screenshots")
+            screenshots_dir.mkdir(exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = screenshots_dir / f"{name}_{timestamp}.png"
-        self.driver.get_screenshot_as_file(str(filename))
-        log.info(f"Screenshot saved: {filename}")
-        return str(filename)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = screenshots_dir / f"{name}_{timestamp}.png"
+            self.driver.get_screenshot_as_file(str(filename))
+            log.info(f"Screenshot saved: {filename}")
+            return str(filename)
+        except Exception as e:
+            log.warning(f"Failed to take screenshot '{name}': {e}")
+            return None

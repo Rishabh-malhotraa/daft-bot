@@ -1,9 +1,13 @@
-import sys
 from pathlib import Path
 from daftlistings import Listing
 from .logger import get_logger
 
 log = get_logger(__name__)
+
+
+class CacheError(Exception):
+    """Raised when cache file operations fail."""
+    pass
 
 
 def load_seen(seen_file: str) -> set[str]:
@@ -37,7 +41,7 @@ def save_seen(seen: set[str], seen_file: str) -> None:
         log.info(f"Saved {len(seen)} seen listings")
     except (IOError, OSError) as e:
         log.error(f"Unable to write seen file: {e}")
-        sys.exit(1)
+        raise CacheError(f"Unable to write seen file: {e}") from e
 
 
 def save_images(listings: list[Listing], images_file: str = "images.txt") -> None:
@@ -46,7 +50,7 @@ def save_images(listings: list[Listing], images_file: str = "images.txt") -> Non
         return
 
     try:
-        with open(images_file, "a") as f:
+        with open(images_file, "a", encoding="utf-8") as f:
             for listing in listings:
                 f.write(f"\n{'=' * 50}\n{listing.title}\n{listing.daft_link}\n\n")
 

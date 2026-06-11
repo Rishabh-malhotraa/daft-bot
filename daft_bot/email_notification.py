@@ -1,11 +1,15 @@
 from email.message import EmailMessage
 import smtplib
-import sys
 from daftlistings import Listing
 from .config import EmailConfig
 from .logger import get_logger
 
 log = get_logger(__name__)
+
+
+class EmailNotificationError(Exception):
+    """Raised when email notification fails."""
+    pass
 
 
 class EmailNotifier:
@@ -26,33 +30,21 @@ class EmailNotifier:
         msg = self._build_error_message(listing)
         self._send_email(msg)
 
-    def _create_smtp_connection(self) -> smtplib.SMTP:
-        """Create and configure SMTP connection."""
-        try:
-            server = smtplib.SMTP(self.config.server, self.config.port)
-        except ValueError as e:
-            log.error(f"Configuration error: {e}")
-            sys.exit(1)
-        except Exception as e:
-            log.error(f"Unable to connect to email server: {e}")
-            sys.exit(1)
-
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login(self.config.user, self.config.password)
-        return server
-
     def _send_email(self, msg: EmailMessage) -> None:
-        """Send email using SMTP."""
-        server = self._create_smtp_connection()
+        """Send email using SMTP with TLS."""
         try:
-            server.sendmail(
-                self.config.sender, self.config.recipients, msg.as_string(unixfrom=True)
-            )
-        finally:
-            server.quit()
-        log.info("Email sent successfully")
+            with smtplib.SMTP(self.config.server, self.config.port) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(self.config.user, self.config.password)
+                server.sendmail(
+                    self.config.sender, self.config.recipients, msg.as_string(unixfrom=True)
+                )
+            log.info("Email sent successfully")
+        except (smtplib.SMTPException, OSError) as e:
+            log.error(f"Failed to send email: {e}")
+            raise EmailNotificationError(f"Failed to send email: {e}") from e
 
     def _build_listings_message(self, listings: list[Listing]) -> EmailMessage:
         """Build email message for listing notifications."""

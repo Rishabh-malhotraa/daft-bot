@@ -2,13 +2,13 @@ from daftlistings import Daft, Location, SearchType, Distance, Listing
 from dotenv import load_dotenv
 from .email_notification import EmailNotifier
 from .selenium_bot import DaftBot
-from .cache import load_seen, save_seen, save_images
+from .cache import load_seen, save_seen, save_images, CacheError
 from .config import load_config, AppConfig
 from .logger import setup_logging, get_logger
 from datetime import datetime
 from time import time
 from pathlib import Path
-import pytz
+from zoneinfo import ZoneInfo
 import argparse
 import sys
 
@@ -37,10 +37,9 @@ def parse_args() -> argparse.Namespace:
         help="No-op mode: only save seen listings, don't send applications",
     )
     parser.add_argument(
-        "--fast",
+        "--no-fast",
         action="store_true",
-        default=True,
-        help="Use cached form values when doing automated replies",
+        help="Disable cached form values, fill all fields manually",
     )
     parser.add_argument(
         "--visible",
@@ -107,7 +106,7 @@ def get_new_listings(daft: Daft, seen: set[str]) -> list[Listing]:
 
 def log_current_time() -> None:
     """Log current time in Irish timezone."""
-    current_time = datetime.now(pytz.timezone("Europe/Dublin"))
+    current_time = datetime.now(ZoneInfo("Europe/Dublin"))
     log.info(f"Current time (Dublin): {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
@@ -149,7 +148,7 @@ def main() -> None:
             email_notifier=email_notifier,
             headless=not args.visible,
         )
-        bot.process_listings(new_listings, seen, use_cached_values=args.fast)
+        bot.process_listings(new_listings, seen, use_cached_values=not args.no_fast)
     else:
         log.info("Noop mode: skipping automated responses")
 

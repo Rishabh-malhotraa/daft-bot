@@ -12,7 +12,6 @@ packages = [{ include = "daft_bot" }]
 python = "^3.11"
 daftlistings = "^2.0.5"
 python-dotenv = "^1.2.1"
-pytz = "^2025.2"
 requests = "^2.32.5"
 selenium = "^4.40.0"
 webdriver-manager = "^4.0.2"
