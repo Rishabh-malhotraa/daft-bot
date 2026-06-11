@@ -11,10 +11,10 @@ packages = [{ include = "daft_bot" }]
 [tool.poetry.dependencies]
 python = "^3.11"
 daftlistings = "^2.0.5"
-python-dotenv = "^1.2.1"
-requests = "^2.32.5"
-selenium = "^4.40.0"
-webdriver-manager = "^4.0.2"
+python-dotenv = "^1.2.2"
+requests = "^2.34.2"
+selenium = "^4.44.0"
+webdriver-manager = "^4.1.2"
 
 [tool.poetry.group.dev.dependencies]
 # Add dev dependencies here if needed
